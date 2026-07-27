@@ -36,6 +36,10 @@ const ErrorBookPage = {
           <div class="action-card-label">今日推荐复习</div>
           ${todayRecCount > 0 ? `<span class="tag tag-red" style="font-size:10px;margin-top:2px;">${todayRecCount}题</span>` : ''}
         </div>
+        <div class="action-card" onclick="ErrorBookPage.takePhotoError()">
+          <div class="action-card-icon">📸</div>
+          <div class="action-card-label">拍照记错题</div>
+        </div>
         <div class="action-card" onclick="ErrorBookPage.generateErrorSet()">
           <div class="action-card-icon">📋</div>
           <div class="action-card-label">生成错题集</div>
@@ -603,5 +607,29 @@ const ErrorBookPage = {
       autoClearImages: false,
       vibration: true
     });
+  },
+
+  // ===== 拍照记错题（直接拍照创建错题）=====
+  async takePhotoError() {
+    try {
+      const img = await Utils.captureImage();
+      // 拍照后创建错题记录
+      const errorId = Utils.uid();
+      const newError = {
+        id: errorId,
+        questionId: 'photo_' + errorId,
+        course: '拍照错题',
+        wrongCount: 1,
+        mastered: false,
+        notes: { text: '', voiceText: '', images: [img] },
+        lastWrongDate: Utils.today(),
+        reviewedDates: []
+      };
+      await DB.add('errors', newError);
+      Utils.toast('✅ 拍照错题已保存');
+      this.showDetail(errorId);
+    } catch (e) {
+      Utils.toast(e.message || '取消拍照');
+    }
   }
 };
